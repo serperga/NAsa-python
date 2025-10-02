@@ -1,0 +1,5 @@
+llama-index-core
+openai
+llama-index
+requests
+python-dotenv
