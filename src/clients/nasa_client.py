@@ -1,6 +1,6 @@
 import requests
 from src.config.settings import NASA_API_KEY, DEFAULT_IMAGE_COUNT
-from config.api.api_endpoints import NASA_APOD_BASE_URL
+from src.config.api.api_endpoints import NASA_APOD_BASE_URL
 
 def get_apod_images(count: int = DEFAULT_IMAGE_COUNT):
     """
