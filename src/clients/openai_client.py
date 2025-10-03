@@ -1,28 +1,23 @@
-from src.config.settings import OPENAI_API_KEY
+import os
+from llama_index.llms.openai import OpenAI
 
 class OpenAIClient:
-    """
-    Clase para manejar la API de OpenAI.
-    Se encarga de validar la clave y crear clientes LLM.
-    """
-
-    def __init__(self, api_key: str = None):
-        # Usar la API key pasada o la del settings.py
-        self.api_key = api_key or OPENAI_API_KEY
-        self.validate_api_key()
-
-    def validate_api_key(self):
+    def __init__(self):
         """
-        Comprueba que la API key está definida.
-        Lanza excepción si falta.
+        Inicializa el cliente leyendo la API key desde la variable de entorno OPENAI_API_KEY.
         """
-        if not self.api_key:
-            raise ValueError(
-                "Falta configurar OPENAI_API_KEY en .env o pasarla como argumento."
-            )
+        self.api_key = os.getenv("OPENAI_API_KEY")
 
-    def get_key(self) -> str:
+    def get_key(self):
         """
-        Devuelve la API key validada.
+        Devuelve la API key almacenada.
         """
         return self.api_key
+
+    def get_llm(self, model="gpt-4.1", temperature=0.1):
+        """
+        Devuelve un objeto LLM OpenAI listo para usar en Settings o build_index.
+        """
+        if not self.api_key:
+            raise ValueError("No se encontró la API key de OpenAI.")
+        return OpenAI(model=model, temperature=temperature, api_key=self.api_key)
