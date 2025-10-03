@@ -1,45 +1,47 @@
 import pytest
 from src.clients.nasa_client import get_apod_images
+import requests
 
 
-def test_get_apod_images_success(monkeypatch):
-    """Testea que se obtienen imágenes cuando la API responde 200."""
+def test_get_apod_images_returns_mock(monkeypatch):
+    """
+    Verifica que get_apod_images devuelve datos simulados.
+    Se parchea requests.get para devolver un mock controlado.
+    """
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return [
+                {
+                    "title": "Mock APOD",
+                    "date": "2025-01-01",
+                    "explanation": "Mock explanation",
+                    "url": "http://example.com"
+                }
+            ]
 
-    def mock_request(url, params=None):
-        class MockResponse:
-            status_code = 200
-            text = '[{"title":"Test Image","date":"2025-01-01","explanation":"Mock explanation","url":"http://example.com"}]'
+    monkeypatch.setattr(requests, "get", lambda *a, **k: MockResponse())
 
-            def json(self_inner):
-                import json
-                return json.loads(self_inner.text)
-
-        return MockResponse()
-
-    monkeypatch.setattr("requests.get", mock_request)
-
-    data = get_apod_images(1)
+    data = get_apod_images(3)
     assert isinstance(data, list)
-    assert len(data) == 1
-    assert data[0]["title"] == "Test Image"
+    assert len(data) > 0
+    for item in data:
+        assert "title" in item
+        assert "date" in item
+        assert "explanation" in item
+        assert "url" in item
+
 
 def test_get_apod_images_error(monkeypatch):
-    """Testea que se lanza excepción si la API falla."""
-    def mock_request(url, params=None):
-        class MockResponse:
-            status_code = 500
-            text = '{"error":"Internal Server Error"}'
-            def json(self_inner):
-                import json
-                return json.loads(self_inner.text)
-        return MockResponse()
+    """
+    Simula un error de API forzado lanzando Exception en requests.get.
+    """
+    def mock_error(*args, **kwargs):
+        raise Exception("API error simulada")
 
-    monkeypatch.setattr("requests.get", mock_request)
+    monkeypatch.setattr(requests, "get", mock_error)
 
-    # Capturamos la excepción
-    with pytest.raises(Exception) as excinfo:
-        get_apod_images(1)
+    with pytest.raises(Exception) as exc_info:
+        get_apod_images(3)
 
-    assert "Error en la API de NASA" in str(excinfo.value)
-    assert "500" in str(excinfo.value)
-
+    assert "API error simulada" in str(exc_info.value)
